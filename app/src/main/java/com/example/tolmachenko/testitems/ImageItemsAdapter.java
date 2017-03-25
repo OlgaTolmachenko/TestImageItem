@@ -1,12 +1,17 @@
 package com.example.tolmachenko.testitems;
 
-import android.net.Uri;
+import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.example.tolmachenko.testitems.activity.DetailsActivity;
+import com.example.tolmachenko.testitems.model.ImageItem;
+import com.example.tolmachenko.testitems.util.Constants;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
@@ -30,8 +35,10 @@ public class ImageItemsAdapter extends RecyclerView.Adapter<ImageItemsAdapter.It
 
     @Override
     public void onBindViewHolder(ItemsViewHolder holder, int position) {
-        holder.thumb.setImageURI(Uri.parse(imageItems.get(position).thumbUri));
-        holder.imageData.setText(imageItems.get(position).imageData);
+        Picasso.with(holder.itemView.getContext()).load(imageItems.get(position).getImageThumb()).resize(100, 100).centerCrop().into(holder.imageThumb);
+        holder.imageName.setText(imageItems.get(position).getImageName());
+        holder.imageTime.setText(String.valueOf(imageItems.get(position).getImageTime()));
+        holder.setSelectedItem(imageItems.get(position));
     }
 
     @Override
@@ -43,15 +50,36 @@ public class ImageItemsAdapter extends RecyclerView.Adapter<ImageItemsAdapter.It
         return size;
     }
 
-    public static class ItemsViewHolder extends RecyclerView.ViewHolder {
+    public static class ItemsViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        public ImageView thumb;
-        public TextView imageData;
+        public ImageView imageThumb;
+        public TextView imageName;
+        public TextView imageTime;
+
+        private ImageItem selectedItem;
 
         public ItemsViewHolder(View itemView) {
             super(itemView);
-            thumb = (ImageView) itemView.findViewById(R.id.thumb);
-            imageData = (TextView) itemView.findViewById(R.id.imageData);
+            imageThumb = (ImageView) itemView.findViewById(R.id.thumb);
+            imageName = (TextView) itemView.findViewById(R.id.name);
+            imageTime = (TextView) itemView.findViewById(R.id.time);
+            itemView.setOnClickListener(this);
+        }
+
+        public ImageItem getSelectedItem() {
+            return selectedItem;
+        }
+
+        public void setSelectedItem(ImageItem selectedItem) {
+            this.selectedItem = selectedItem;
+        }
+
+        @Override
+        public void onClick(View view) {
+            Intent openFullPhoto = new Intent(view.getContext(), DetailsActivity.class);
+            openFullPhoto.putExtra(Constants.INTENT_KEY_NAME, selectedItem.getImageName());
+            openFullPhoto.putExtra(Constants.INTENT_KEY_PHOTO, selectedItem.getImageThumb().toString());
+            view.getContext().startActivity(openFullPhoto);
         }
     }
 }

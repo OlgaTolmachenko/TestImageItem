@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">TestItems</string>
+    <string name="text_add_photo_title">Add photo</string>
+    <string name="chooser_title">Select your image</string>
+    <string name="text_take_from_gallery">From gallery</string>
+    <string name="text_take_from_camera">Take a photo</string>
 </resources>
