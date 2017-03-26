@@ -5,12 +5,10 @@ import android.annotation.TargetApi;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.database.CursorIndexOutOfBoundsException;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
@@ -27,6 +25,7 @@ import com.example.tolmachenko.testitems.R;
 import com.example.tolmachenko.testitems.model.ImageItem;
 import com.example.tolmachenko.testitems.util.CameraHelper;
 import com.example.tolmachenko.testitems.util.Constants;
+import com.example.tolmachenko.testitems.util.GalleryHelper;
 import com.example.tolmachenko.testitems.util.ItemDecorator;
 
 import java.io.File;
@@ -37,13 +36,17 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<ImageItem> imageItems;
     private ImageItemsAdapter adapter;
     private CameraHelper cameraHelper;
+    private GalleryHelper galleryHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        cameraHelper = new CameraHelper(this);
+        galleryHelper = new GalleryHelper(this);
         imageItems = new ArrayList<>();
+
         FloatingActionButton addFab = (FloatingActionButton) findViewById(R.id.addFab);
         addFab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -52,11 +55,10 @@ public class MainActivity extends AppCompatActivity {
                 getAlertDialog(items).show();
             }
         });
-        setupRecycler();
-        cameraHelper = new CameraHelper(this);
+        setupRecycler(imageItems);
     }
 
-    private void setupRecycler() {
+    private void setupRecycler(ArrayList<ImageItem> imageItems) {
         RecyclerView imageRecycler = (RecyclerView) findViewById(R.id.recycler);
         adapter = new ImageItemsAdapter(imageItems);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
@@ -79,14 +81,14 @@ public class MainActivity extends AppCompatActivity {
             switch (requestCode) {
                 case Constants.REQUEST_LIBRARY:
                     try {
-                        image = getImageFromGallery(data.getData());
+                        image = galleryHelper.getImageFromGallery(data.getData());
                     } catch (NullPointerException | CursorIndexOutOfBoundsException e) {
                         Log.d(Constants.TAG, e.toString());
                         e.printStackTrace();
                     }
                     break;
                 case Constants.REQUEST_CAMERA:
-//                    cameraHelper.addPickToGallery();
+                    cameraHelper.galleryAddPic();
                     imageFile = new File(cameraHelper.getPhotoPath());
                     image = new ImageItem(Uri.fromFile(imageFile), imageFile.getName(), imageFile.lastModified());
                     break;
@@ -95,30 +97,6 @@ public class MainActivity extends AppCompatActivity {
             imageItems.add(image);
             adapter.notifyDataSetChanged();
         }
-    }
-
-    private ImageItem getImageFromGallery(Uri imageUri) throws NullPointerException {
-        Cursor cursor = getContentResolver().query(imageUri, null, null, null, null);
-        if (cursor == null) {
-            throw new NullPointerException();
-        }
-        cursor.moveToFirst();
-        String document_id = cursor.getString(0);
-        document_id = document_id.substring(document_id.lastIndexOf(":")+1);
-        cursor.close();
-
-        cursor = getContentResolver().query(
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                null, MediaStore.Images.Media._ID + " = ? ", new String[]{document_id}, null);
-        if (cursor == null) {
-            throw new NullPointerException();
-        }
-        cursor.moveToFirst();
-        String name = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DISPLAY_NAME));
-        long time = Long.parseLong(cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATE_TAKEN)));
-        cursor.close();
-
-        return new ImageItem(imageUri, name, time);
     }
 
     private AlertDialog getAlertDialog(CharSequence[] items) {
@@ -132,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
                                 if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                                     requestDocumentsPermissions();
                                 } else {
-                                    getThumbFromGallery();
+                                    galleryHelper.dispatchGalleryIntent();
                                 }
                                 break;
                             case 1:
@@ -145,14 +123,6 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 }).create();
-    }
-
-    private void getThumbFromGallery() {
-        final String chooserTitle = getString(R.string.chooser_title);
-        Intent intent = new Intent();
-        intent.setType(Constants.IMAGE);
-        intent.setAction(Intent.ACTION_PICK);
-        startActivityForResult(Intent.createChooser(intent, chooserTitle), Constants.REQUEST_LIBRARY);
     }
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
@@ -174,10 +144,9 @@ public class MainActivity extends AppCompatActivity {
                         && permissions[0].equals(android.Manifest.permission.READ_EXTERNAL_STORAGE)
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
-                    getThumbFromGallery();
+                    galleryHelper.dispatchGalleryIntent();
                 }
             }
-
             case Constants.REQUEST_CAMERA_PERMISSION: {
                 if (grantResults.length > 0
                         && permissions[0].equals(Manifest.permission.CAMERA)
@@ -187,6 +156,21 @@ public class MainActivity extends AppCompatActivity {
                     cameraHelper.dispatchTakePictureIntent();
                 }
             }
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelableArrayList(Constants.KEY_IMAGE_ITEMS, imageItems);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        if (savedInstanceState != null) {
+            imageItems = savedInstanceState.getParcelableArrayList(Constants.KEY_IMAGE_ITEMS);
+            setupRecycler(imageItems);
         }
     }
 }

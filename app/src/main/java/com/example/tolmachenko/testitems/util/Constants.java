@@ -14,4 +14,5 @@ public class Constants {
     public static final String TAG = "testitems_log";
     public static final String INTENT_KEY_PHOTO = "photo";
     public static final String INTENT_KEY_NAME = "name";
+    public static final String KEY_IMAGE_ITEMS = "imageItems";
 }

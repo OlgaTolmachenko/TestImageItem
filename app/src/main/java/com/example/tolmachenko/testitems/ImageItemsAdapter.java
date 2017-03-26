@@ -1,5 +1,6 @@
 package com.example.tolmachenko.testitems;
 
+import android.content.Context;
 import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -35,7 +36,9 @@ public class ImageItemsAdapter extends RecyclerView.Adapter<ImageItemsAdapter.It
 
     @Override
     public void onBindViewHolder(ItemsViewHolder holder, int position) {
-        Picasso.with(holder.itemView.getContext()).load(imageItems.get(position).getImageThumb()).resize(100, 100).centerCrop().into(holder.imageThumb);
+        Context context = holder.itemView.getContext();
+        int photoSideDimen = context.getResources().getDimensionPixelOffset(R.dimen.picasso_100dp);
+        Picasso.with(context).load(imageItems.get(position).getImageThumb()).resize(photoSideDimen, photoSideDimen).centerCrop().into(holder.imageThumb);
         holder.imageName.setText(imageItems.get(position).getImageName());
         holder.imageTime.setText(String.valueOf(imageItems.get(position).getImageTime()));
         holder.setSelectedItem(imageItems.get(position));

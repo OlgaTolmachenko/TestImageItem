@@ -3,6 +3,7 @@ package com.example.tolmachenko.testitems.activity;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.view.MenuItem;
 import android.widget.ImageView;
 
 import com.example.tolmachenko.testitems.R;
@@ -30,9 +31,18 @@ public class DetailsActivity extends AppCompatActivity {
             Picasso
                     .with(this)
                     .load(getIntent().getStringExtra(Constants.INTENT_KEY_PHOTO))
-                    .fit()
-                    .centerCrop()
                     .into(fullPhoto);
         }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                return true;
+        }
+
+        return(super.onOptionsItemSelected(item));
     }
 }

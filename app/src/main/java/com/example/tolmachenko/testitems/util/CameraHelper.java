@@ -1,12 +1,11 @@
 package com.example.tolmachenko.testitems.util;
 
 import android.app.Activity;
-import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.util.Log;
+import android.support.v4.content.FileProvider;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,39 +31,39 @@ public class CameraHelper {
 
     private File createImageFile() throws IOException {
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String photoName = "IMG_" + timeStamp + ".jpg";
-        String folderName = "TestItemsImages";
-        File imagesFolder = new File(Environment.getExternalStorageDirectory(), folderName);
-        imagesFolder.mkdirs();
-        File image = new File(imagesFolder, photoName);
+        String imageFileName = "IMG_" + timeStamp + "_";
+        File storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(imageFileName, ".jpg", storageDir);
+
         photoPath = image.getAbsolutePath();
         return image;
     }
 
     public void dispatchTakePictureIntent() {
+
+        String AUTHORITY = "com.example.tolmachenko.testitems.fileprovider";
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        File photoFile = null;
-        try {
-            photoFile = createImageFile();
-        } catch (IOException ex) {
-            Log.d(Constants.TAG, ex.toString());
-        }
-        if (photoFile != null) {
-            Uri uriSavedImage = Uri.fromFile(photoFile);
-            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, uriSavedImage);
+
+        if (takePictureIntent.resolveActivity(context.getPackageManager()) != null) {
+            File photoFile = null;
             try {
+                photoFile = createImageFile();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+            if (photoFile != null) {
+                Uri photoURI = FileProvider.getUriForFile(context, AUTHORITY, photoFile);
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                 context.startActivityForResult(takePictureIntent, Constants.REQUEST_CAMERA);
-            } catch (ActivityNotFoundException e) {
-                Log.d(Constants.TAG, e.toString());
             }
         }
     }
 
-//    public void addPickToGallery() {
-//        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-//        File imageFile = new File(photoPath);
-//        Uri contentUri = Uri.fromFile(imageFile);
-//        mediaScanIntent.setData(contentUri);
-//        context.sendBroadcast(mediaScanIntent);
-//    }
+    public void galleryAddPic() {
+        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        File f = new File(photoPath);
+        Uri contentUri = Uri.fromFile(f);
+        mediaScanIntent.setData(contentUri);
+        context.sendBroadcast(mediaScanIntent);
+    }
 }

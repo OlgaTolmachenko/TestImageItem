@@ -20,8 +20,7 @@
         <TextView
             android:id="@+id/name"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="2"
+            android:layout_height="wrap_content"
             android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
             android:ellipsize="middle"
             android:maxLines="1"/>
@@ -29,8 +28,7 @@
         <TextView
             android:id="@+id/time"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
+            android:layout_height="wrap_content"
             android:textAppearance="@style/Base.TextAppearance.AppCompat.Small" />
 
     </LinearLayout>

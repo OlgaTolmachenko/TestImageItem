@@ -1,6 +1,8 @@
 package com.example.tolmachenko.testitems.model;
 
 import android.net.Uri;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import java.text.SimpleDateFormat;
 
@@ -8,7 +10,7 @@ import java.text.SimpleDateFormat;
  * Created by Olga Tolmachenko on 24.03.17.
  */
 
-public class ImageItem {
+public class ImageItem implements Parcelable {
 
     private Uri imageThumb;
     private String imageName;
@@ -19,6 +21,24 @@ public class ImageItem {
         this.imageName = imageName;
         this.imageTime = imageTime;
     }
+
+    protected ImageItem(Parcel in) {
+        imageThumb = in.readParcelable(Uri.class.getClassLoader());
+        imageName = in.readString();
+        imageTime = in.readLong();
+    }
+
+    public static final Creator<ImageItem> CREATOR = new Creator<ImageItem>() {
+        @Override
+        public ImageItem createFromParcel(Parcel in) {
+            return new ImageItem(in);
+        }
+
+        @Override
+        public ImageItem[] newArray(int size) {
+            return new ImageItem[size];
+        }
+    };
 
     public Uri getImageThumb() {
         return imageThumb;
@@ -43,5 +63,17 @@ public class ImageItem {
 
     public void setImageTime(long imageTime) {
         this.imageTime = imageTime;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel parcel, int i) {
+        parcel.writeParcelable(imageThumb, i);
+        parcel.writeString(imageName);
+        parcel.writeLong(imageTime);
     }
 }
